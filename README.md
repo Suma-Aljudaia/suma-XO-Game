@@ -26,7 +26,7 @@ This project showcases a working example of a type of Artificial Intelligence ca
 ## Imperfect AI for a More Realistic Experience
 
 Because Minimax represents a nearly perfect player, it often leads to unbeatable gameplay.  
-To simulate more human-like behavior, a small **error rate of 30%** was added —  
+To simulate more human-like behavior, a small **error rate of 15%** was added —  
 a technique known as **Imperfect AI Behavior**, commonly used in AI game development  
 to make the experience more balanced and realistic.
 
