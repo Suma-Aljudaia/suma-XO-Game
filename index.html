@@ -1,0 +1,278 @@
+<!-- 
+  Project: XO Game with AI (Minimax Algorithm)
+  Developed by: Suma Aljudaia
+  Email: sumaaljudaia@gmail.com
+  GitHub: https://github.com/Suma-Aljudaia
+  Date: May 2025
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>XO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #b88c9e, #e4b7c4, #f5dce3);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            color: #4b382d;
+            letter-spacing: 3px;
+        }
+
+        .player-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            margin: 20px 0 10px;
+            color: #4b382d;
+            gap: 50px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-gap: 12px;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .cell {
+            width: 120px;
+            height: 120px;
+            background-color: #fff;
+            font-size: 64px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #bbb;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .cell:hover {
+            background-color: #eaeaea;
+            transform: scale(1.03);
+        }
+
+        .cell.X {
+            color: #000000;
+        }
+
+        .cell.O {
+            color: #a75d67;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4b382d;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin: 15px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #32261d;
+        }
+
+        #name-screen {
+            background: #ffffff;
+            padding: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            display: block;
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            margin: 10px;
+            width: 80%;
+            color: #4b382d;
+        }
+
+        input::placeholder {
+            color: #a1866f;
+            opacity: 0.6;
+        }
+
+        #status {
+            font-size: 22px;
+            color: #4b382d;
+            margin: 10px 0 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>XO</h1>
+
+    <div id="name-screen">
+        <p style="color: #4b382d; font-size: 20px;">Enter your name to start:</p>
+        <input type="text" id="playerNameInput" placeholder="Your Name">
+        <br>
+        <button onclick="startGame()">▶ Start Game</button>
+    </div>
+
+    <div id="game-area" style="display:none;">
+        <div class="player-info" id="playerDisplay"></div>
+        <div class="board" id="board"></div>
+        <p id="status"></p>
+        <button onclick="startGame()">↻ Restart Game</button>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById("board");
+        const statusElement = document.getElementById("status");
+        const nameScreen = document.getElementById("name-screen");
+        const gameArea = document.getElementById("game-area");
+        const playerNameInput = document.getElementById("playerNameInput");
+        const playerDisplay = document.getElementById("playerDisplay");
+
+        let board = Array(9).fill(null);
+        let player = "X";
+        let ai = "O";
+        let playerName = "You";
+        let aiName = "Suma";
+
+        function startGame() {
+            const name = playerNameInput.value.trim();
+            if (name) {
+                playerName = name;
+            }
+
+            board = Array(9).fill(null);
+            nameScreen.style.display = "none";
+            gameArea.style.display = "block";
+            statusElement.textContent = "";
+            playerDisplay.textContent = `${playerName} VS ${aiName}`;
+            render();
+        }
+
+        function render() {
+            boardElement.innerHTML = "";
+            board.forEach((cell, i) => {
+                const cellElement = document.createElement("div");
+                cellElement.className = "cell";
+                if (cell === "X") cellElement.classList.add("X");
+                if (cell === "O") cellElement.classList.add("O");
+                cellElement.textContent = cell || "";
+                cellElement.addEventListener("click", () => playerMove(i));
+                boardElement.appendChild(cellElement);
+            });
+        }
+
+        function playerMove(index) {
+            if (board[index] || isGameOver()) return;
+            board[index] = player;
+            render();
+            if (!isGameOver()) {
+                setTimeout(() => {
+                    let aiMove = findBestMove();
+                    board[aiMove] = ai;
+                    render();
+                    if (isGameOver()) {
+                        statusElement.textContent = checkWinner() ? `${aiName} wins!` : "It's a draw.";
+                    }
+                }, 400);
+            } else {
+                statusElement.textContent = checkWinner() ? `${playerName} wins!` : "It's a draw.";
+            }
+        }
+
+        function isGameOver() {
+            return checkWinner() || board.every(cell => cell);
+        }
+
+        function checkWinner() {
+            const wins = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            return wins.some(combo => {
+                const [a, b, c] = combo;
+                return board[a] && board[a] === board[b] && board[a] === board[c];
+            });
+        }
+
+        function findBestMove() {
+            const emptyCells = board.map((cell, i) => cell === null ? i : null).filter(i => i !== null);
+
+            // 30% احتمال يلعب حركة عشوائية
+            if (Math.random() < 0.3) {
+                const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                return emptyCells[randomIndex];
+            }
+
+            let bestScore = -Infinity;
+            let move;
+            emptyCells.forEach(i => {
+                board[i] = ai;
+                let score = minimax(board, 0, false);
+                board[i] = null;
+                if (score > bestScore) {
+                    bestScore = score;
+                    move = i;
+                }
+            });
+            return move;
+        }
+
+        function minimax(newBoard, depth, isMaximizing) {
+            if (checkWinner()) return isMaximizing ? -10 : 10;
+            if (newBoard.every(cell => cell)) return 0;
+
+            if (isMaximizing) {
+                let bestScore = -Infinity;
+                newBoard.forEach((cell, i) => {
+                    if (!cell) {
+                        newBoard[i] = ai;
+                        let score = minimax(newBoard, depth + 1, false);
+                        newBoard[i] = null;
+                        bestScore = Math.max(score, bestScore);
+                    }
+                });
+                return bestScore;
+            } else {
+                let bestScore = Infinity;
+                newBoard.forEach((cell, i) => {
+                    if (!cell) {
+                        newBoard[i] = player;
+                        let score = minimax(newBoard, depth + 1, true);
+                        newBoard[i] = null;
+                        bestScore = Math.min(score, bestScore);
+                    }
+                });
+                return bestScore;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
